@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println("ASTAR")
+	fmt.Println("ASTAR\t\t")
 	display(data)
 	dfs(1, 1)
 }
@@ -70,7 +70,7 @@ dfs algorithm
  */
 func dfs(i, j int) {
 	v := data[i][j]
-	fmt.Println(fmt.Sprintf("(%d,%d):%d", i, j, v))
+	fmt.Println(fmt.Sprintf("(%d,%d):%d\t\t", i, j, v))
 	display(data)
 	if v == target {
 		fmt.Println("target is found, costs ", time.Since(start))
