@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -61,7 +62,7 @@ func dfs(i,j int)  {
 	v := data[i][j]
 	if v==target {
 		fmt.Println("target is found.")
-		return
+		os.Exit(0)
 	}
 	if visited[i][j] || v!=0 {
 		return
