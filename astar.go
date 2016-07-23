@@ -11,7 +11,8 @@ import (
 func main() {
 	fmt.Println("ASTAR\t\t")
 	display(data)
-	dfs(startVst.i, startVst.j)
+	//dfs(startVst.i, startVst.j)
+	astar()
 }
 
 var (
@@ -29,12 +30,16 @@ var (
 	visited   [][]bool
 	startV    = 7
 	targetV   = 9
+	visitedV  = 2
 	startVst  = vst{i: 1, j: 1}
 	obstacle  = 1
-	targetVst = vst{i: 6, j: 6}
+	targetVst = vst{i: 4, j: 6}
 	m         = len(data)
 	n         = len(data[0])
+	open      sortedMap
+	closeM    map[vst]*vst
 	start     = time.Now()
+	step = 0
 )
 
 func init() {
@@ -46,6 +51,49 @@ func init() {
 		visited[i] = make([]bool, n)
 	}
 	data[targetVst.i][targetVst.j] = targetV
+	open = sortedMap{vstMap: make(map[vst]*vst)}
+	open.add(&startVst)
+	closeM = make(map[vst]*vst)
+}
+
+type sortedMap struct {
+	vstMap map[vst]*vst
+}
+
+func (m *sortedMap) add(v *vst) {
+	//fmt.Println(v,v.parent)
+	//if v.parent!=nil {
+	//	v.step = v.parent.step+1
+	//}else {
+	//	v.step = 1
+	//}
+	m.vstMap[*v] = v
+}
+
+func (m *sortedMap) remove(v *vst) {
+	closeM[*v] = v
+	delete(m.vstMap, *v)
+}
+
+/**
+should use bubble sort to find the min(fn)
+ */
+func (m *sortedMap) Sort() *vst {
+	sortedVsts := make([]*vst, 0, len(m.vstMap))
+	for _,it:=range m.vstMap{
+		sortedVsts = append(sortedVsts,it.newOne())
+	}
+	mvsts:=vstSlc2(sortedVsts)
+	if mvsts.Len() <= 0 {
+		return nil
+	}
+	mvsts.Sort()
+	for i := 0; i < len(sortedVsts); i++ {
+		if closeM[*sortedVsts[i]]==nil {
+			return sortedVsts[i]
+		}
+	}
+	return nil
 }
 
 /**
@@ -60,15 +108,45 @@ func display(data [][]int) {
 	}
 }
 
-/**
-print the current rute
-*/
-func rute(r [][]bool) {
-	for _, it := range r {
-		for _, itt := range it {
-			fmt.Print(itt, "  ")
+func astar() {
+	i := 0
+	for {
+		i++
+		if i >65 {
+			break
 		}
-		fmt.Println()
+		currentVst := open.Sort()
+		if nil == currentVst {
+			fmt.Println("no path.")
+			return
+		}
+		fmt.Println(currentVst.hashString(),currentVst.step)
+		fmt.Println(closeM)
+		if currentVst.reached(targetVst.i, targetVst.j) {
+			fmt.Println("target is found.")
+			return
+		}
+		open.remove(currentVst)
+		if !startVst.reached(currentVst.i, currentVst.j) {
+			data[currentVst.i][currentVst.j] = visitedV
+		}
+		display(data)
+		vsts := currentVst.next()
+		for _, it := range vsts {
+			if closeM[*it] != nil {
+				continue
+			}
+			if nil == open.vstMap[*it] {
+				if it.parent == nil{
+					it.parent = currentVst
+				}
+				open.add(it)
+			} else {
+				if it.fn() > it.fn() {
+					it.parent = currentVst
+				}
+			}
+		}
 	}
 }
 
@@ -82,7 +160,7 @@ func dfs(i, j int) {
 	}
 	fmt.Println(fmt.Sprintf("(%d,%d):%d\t\t", i, j, v))
 	if !startVst.reached(i, j) {
-		data[i][j] = 2
+		data[i][j] = visitedV
 	}
 	display(data)
 	visited[i][j] = true
@@ -97,7 +175,28 @@ func dfs(i, j int) {
 visit step
 */
 type vst struct {
-	i, j int
+	i, j   int  // pos
+	step   int  // step count
+	parent *vst // parent vst
+	f      int
+}
+
+func (v vst) newOne() *vst {
+	return &vst{
+		i:      v.i,
+		j:      v.j,
+		parent: v.parent,
+		step:   v.step,
+		f:      v.f,
+	}
+}
+
+func (v vst) fn() int {
+	return v.dis(targetVst)+step
+}
+
+func (v *vst) String() string {
+	return fmt.Sprintf("%s", v.hashString())
 }
 
 /**
@@ -107,11 +206,33 @@ func (v vst) reached(i, j int) bool {
 	return i == v.i && j == v.j
 }
 
+func (v vst) hashString() string {
+	return fmt.Sprintf("%d_%d", v.i, v.j)
+}
+
 /**
 distance to the target position
 */
 func (v vst) dis(trgt vst) int {
 	return (int(math.Abs(float64(trgt.i-v.i)) + math.Abs(float64(trgt.j-v.j))))
+}
+
+func (v vst) next() []*vst {
+	i, j := v.i, v.j
+	vsts := make([]*vst, 0, 4)
+	if safe(i-1, j) {
+		vsts = append(vsts, &vst{i: i - 1, j: j})
+	}
+	if safe(i+1, j) {
+		vsts = append(vsts, &vst{i: i + 1, j: j})
+	}
+	if safe(i, j-1) {
+		vsts = append(vsts, &vst{i: i, j: j - 1})
+	}
+	if safe(i, j+1) {
+		vsts = append(vsts, &vst{i: i, j: j + 1})
+	}
+	return vsts
 }
 
 type vstSlc []vst
@@ -129,6 +250,24 @@ func (v vstSlc) Swap(i, j int) {
 }
 
 func (v vstSlc) Sort() {
+	sort.Sort(v)
+}
+
+type vstSlc2 []*vst
+
+func (v vstSlc2) Len() int {
+	return len(v)
+}
+
+func (v vstSlc2) Less(i, j int) bool {
+	return v[i].dis(targetVst)+v[i].step < v[j].dis(targetVst)+v[j].step
+}
+
+func (v vstSlc2) Swap(i, j int) {
+	v[i], v[j] = v[j], v[i]
+}
+
+func (v vstSlc2) Sort() {
 	sort.Sort(v)
 }
 
@@ -165,6 +304,9 @@ func safe(i, j int) bool {
 	if targetVst.reached(i, j) {
 		fmt.Println("target is found, costs ", time.Since(start))
 		os.Exit(0)
+	}
+	if data[i][j] == obstacle {
+		return false
 	}
 	if !visited[i][j] {
 		return true
