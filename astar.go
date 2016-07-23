@@ -37,7 +37,7 @@ var (
 	m         = len(data)
 	n         = len(data[0])
 	open      sortedMap
-	closeM    map[vst]*vst
+	closeM    map[string]*vst
 	start     = time.Now()
 	step = 0
 )
@@ -53,7 +53,7 @@ func init() {
 	data[targetVst.i][targetVst.j] = targetV
 	open = sortedMap{vstMap: make(map[vst]*vst)}
 	open.add(&startVst)
-	closeM = make(map[vst]*vst)
+	closeM = make(map[string]*vst)
 }
 
 type sortedMap struct {
@@ -62,16 +62,16 @@ type sortedMap struct {
 
 func (m *sortedMap) add(v *vst) {
 	//fmt.Println(v,v.parent)
-	//if v.parent!=nil {
-	//	v.step = v.parent.step+1
-	//}else {
-	//	v.step = 1
-	//}
+	if v.parent!=nil {
+		v.step = v.parent.step+1
+	}else {
+		v.step = 1
+	}
 	m.vstMap[*v] = v
 }
 
 func (m *sortedMap) remove(v *vst) {
-	closeM[*v] = v
+	closeM[v.String()] = v
 	delete(m.vstMap, *v)
 }
 
@@ -89,7 +89,7 @@ func (m *sortedMap) Sort() *vst {
 	}
 	mvsts.Sort()
 	for i := 0; i < len(sortedVsts); i++ {
-		if closeM[*sortedVsts[i]]==nil {
+		if closeM[sortedVsts[i].String()]==nil {
 			return sortedVsts[i]
 		}
 	}
@@ -120,8 +120,10 @@ func astar() {
 			fmt.Println("no path.")
 			return
 		}
-		fmt.Println(currentVst.hashString(),currentVst.step)
-		fmt.Println(closeM)
+		fmt.Println(currentVst.hashString(),currentVst.step,"\t\t")
+		//fmt.Println(closeM)
+		//fmt.Println("open:",open.vstMap)
+		//fmt.Println(open.vstMap[*currentVst],closeM[currentVst.String()])
 		if currentVst.reached(targetVst.i, targetVst.j) {
 			fmt.Println("target is found.")
 			return
@@ -133,7 +135,11 @@ func astar() {
 		display(data)
 		vsts := currentVst.next()
 		for _, it := range vsts {
-			if closeM[*it] != nil {
+			if it.reached(targetVst.i,targetVst.j) {
+				currentVst.path()
+				os.Exit(0)
+			}
+			if closeM[it.String()] != nil {
 				continue
 			}
 			if nil == open.vstMap[*it] {
@@ -181,6 +187,20 @@ type vst struct {
 	f      int
 }
 
+func (v vst) path()  {
+	i:=0
+	p:=&v
+	for {
+		i++
+		if i>65 || p == nil{
+			fmt.Print("start")
+			break
+		}
+		fmt.Print(p.hashString(),"<--")
+		p=p.parent
+	}
+}
+
 func (v vst) newOne() *vst {
 	return &vst{
 		i:      v.i,
@@ -196,7 +216,7 @@ func (v vst) fn() int {
 }
 
 func (v *vst) String() string {
-	return fmt.Sprintf("%s", v.hashString())
+	return fmt.Sprintf("v%d%d", v.i,v.j)
 }
 
 /**
@@ -303,7 +323,7 @@ func safe(i, j int) bool {
 	}
 	if targetVst.reached(i, j) {
 		fmt.Println("target is found, costs ", time.Since(start))
-		os.Exit(0)
+		return true
 	}
 	if data[i][j] == obstacle {
 		return false
