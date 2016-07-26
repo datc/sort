@@ -31,6 +31,7 @@ var (
 	startV    = 7
 	targetV   = 9
 	visitedV  = 2
+	pathV = 3
 	startVst  = vst{i: 1, j: 1}
 	obstacle  = 1
 	targetVst = vst{i: 4, j: 6}
@@ -79,27 +80,25 @@ func (m *sortedMap) remove(v *vst) {
 should use bubble sort to find the min(fn)
  */
 func (m *sortedMap) Sort() *vst {
-	sortedVsts := make([]*vst, 0, len(m.vstMap))
+
+	min:=10000
+	var minVst *vst
+	fn:=0
 	for _,it:=range m.vstMap{
-		sortedVsts = append(sortedVsts,it.newOne())
-	}
-	mvsts:=vstSlc2(sortedVsts)
-	if mvsts.Len() <= 0 {
-		return nil
-	}
-	mvsts.Sort()
-	for i := 0; i < len(sortedVsts); i++ {
-		if closeM[sortedVsts[i].String()]==nil {
-			return sortedVsts[i]
+		fn = it.fn()
+		if min>fn {
+			min = fn
+			minVst = it
 		}
 	}
-	return nil
+	return minVst
 }
 
 /**
 display map
 */
 func display(data [][]int) {
+	println()
 	for _, it := range data {
 		for _, itt := range it {
 			fmt.Print(itt, "  ")
@@ -132,11 +131,13 @@ func astar() {
 		if !startVst.reached(currentVst.i, currentVst.j) {
 			data[currentVst.i][currentVst.j] = visitedV
 		}
-		display(data)
+		//display(data)
 		vsts := currentVst.next()
 		for _, it := range vsts {
 			if it.reached(targetVst.i,targetVst.j) {
-				currentVst.path()
+				it.parent = currentVst
+				currentVst.path(0)
+				display(data)
 				os.Exit(0)
 			}
 			if closeM[it.String()] != nil {
@@ -187,17 +188,14 @@ type vst struct {
 	f      int
 }
 
-func (v vst) path()  {
-	i:=0
-	p:=&v
-	for {
-		i++
-		if i>65 || p == nil{
-			fmt.Print("start")
-			break
-		}
-		fmt.Print(p.hashString(),"<--")
-		p=p.parent
+func (v vst) path(depth int)  {
+	prnt:= v.parent
+	if prnt!=nil && depth<65 {
+		data[v.i][v.j] = pathV
+		prnt.path(depth+1)
+		fmt.Print("-->",v.hashString())
+	}else{
+		print("start")
 	}
 }
 
