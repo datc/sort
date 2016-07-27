@@ -11,8 +11,8 @@ import (
 func main() {
 	fmt.Println("ASTAR\t\t")
 	display(data)
-	//dfs(startVst.i, startVst.j)
-	astar()
+	dfs(startVst.i, startVst.j)
+	//astar()
 }
 
 var (
@@ -41,6 +41,7 @@ var (
 	closeM    map[string]*vst
 	start     = time.Now()
 	step      = 0
+	depth = 0
 )
 
 func init() {
@@ -80,7 +81,6 @@ func (m *sortedMap) remove(v *vst) {
 should use bubble sort to find the min(fn)
 */
 func (m *sortedMap) Sort() *vst {
-
 	min := 10000
 	var minVst *vst
 	fn := 0
@@ -161,6 +161,11 @@ func astar() {
 dfs algorithm
 */
 func dfs(i, j int) {
+	depth ++
+	fmt.Print(".")
+	if depth>100 {
+		os.Exit(-2)
+	}
 	v := data[i][j]
 	if v == obstacle {
 		return
@@ -172,6 +177,9 @@ func dfs(i, j int) {
 	display(data)
 	visited[i][j] = true
 	for _, it := range next(i, j) {
+		if targetVst.reached(it.i,it.j) {
+			os.Exit(0)
+		}
 		dfs(it.i, it.j)
 	}
 	visited[i][j] = false
