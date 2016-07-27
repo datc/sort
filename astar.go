@@ -31,7 +31,7 @@ var (
 	startV    = 7
 	targetV   = 9
 	visitedV  = 2
-	pathV = 3
+	pathV     = 3
 	startVst  = vst{i: 1, j: 1}
 	obstacle  = 1
 	targetVst = vst{i: 4, j: 6}
@@ -40,7 +40,7 @@ var (
 	open      sortedMap
 	closeM    map[string]*vst
 	start     = time.Now()
-	step = 0
+	step      = 0
 )
 
 func init() {
@@ -63,9 +63,9 @@ type sortedMap struct {
 
 func (m *sortedMap) add(v *vst) {
 	//fmt.Println(v,v.parent)
-	if v.parent!=nil {
-		v.step = v.parent.step+1
-	}else {
+	if v.parent != nil {
+		v.step = v.parent.step + 1
+	} else {
 		v.step = 1
 	}
 	m.vstMap[*v] = v
@@ -78,15 +78,15 @@ func (m *sortedMap) remove(v *vst) {
 
 /**
 should use bubble sort to find the min(fn)
- */
+*/
 func (m *sortedMap) Sort() *vst {
 
-	min:=10000
+	min := 10000
 	var minVst *vst
-	fn:=0
-	for _,it:=range m.vstMap{
+	fn := 0
+	for _, it := range m.vstMap {
 		fn = it.fn()
-		if min>fn {
+		if min > fn {
 			min = fn
 			minVst = it
 		}
@@ -111,7 +111,7 @@ func astar() {
 	i := 0
 	for {
 		i++
-		if i >65 {
+		if i > 65 {
 			break
 		}
 		currentVst := open.Sort()
@@ -119,7 +119,7 @@ func astar() {
 			fmt.Println("no path.")
 			return
 		}
-		fmt.Println(currentVst.hashString(),currentVst.step,"\t\t")
+		fmt.Println(currentVst.hashString(), currentVst.step, "\t\t")
 		//fmt.Println(closeM)
 		//fmt.Println("open:",open.vstMap)
 		//fmt.Println(open.vstMap[*currentVst],closeM[currentVst.String()])
@@ -134,7 +134,7 @@ func astar() {
 		//display(data)
 		vsts := currentVst.next()
 		for _, it := range vsts {
-			if it.reached(targetVst.i,targetVst.j) {
+			if it.reached(targetVst.i, targetVst.j) {
 				it.parent = currentVst
 				currentVst.path(0)
 				display(data)
@@ -144,12 +144,12 @@ func astar() {
 				continue
 			}
 			if nil == open.vstMap[*it] {
-				if it.parent == nil{
+				if it.parent == nil {
 					it.parent = currentVst
 				}
 				open.add(it)
 			} else {
-				if it.fn() > it.fn() {
+				if it.fn() >= it.fn() {
 					it.parent = currentVst
 				}
 			}
@@ -188,13 +188,13 @@ type vst struct {
 	f      int
 }
 
-func (v vst) path(depth int)  {
-	prnt:= v.parent
-	if prnt!=nil && depth<65 {
+func (v vst) path(depth int) {
+	prnt := v.parent
+	if prnt != nil && depth < 65 {
 		data[v.i][v.j] = pathV
-		prnt.path(depth+1)
-		fmt.Print("-->",v.hashString())
-	}else{
+		prnt.path(depth + 1)
+		fmt.Print("-->", v.hashString())
+	} else {
 		print("start")
 	}
 }
@@ -210,11 +210,11 @@ func (v vst) newOne() *vst {
 }
 
 func (v vst) fn() int {
-	return v.dis(targetVst)+step
+	return v.dis(targetVst) + step*8
 }
 
 func (v *vst) String() string {
-	return fmt.Sprintf("v%d%d", v.i,v.j)
+	return fmt.Sprintf("v%d%d", v.i, v.j)
 }
 
 /**
