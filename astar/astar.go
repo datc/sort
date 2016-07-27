@@ -162,7 +162,6 @@ dfs algorithm
 */
 func dfs(i, j int) {
 	depth ++
-	fmt.Print(".")
 	if depth>100 {
 		os.Exit(-2)
 	}
@@ -204,16 +203,6 @@ func (v vst) path(depth int) {
 		fmt.Print("-->", v.hashString())
 	} else {
 		print("start")
-	}
-}
-
-func (v vst) newOne() *vst {
-	return &vst{
-		i:      v.i,
-		j:      v.j,
-		parent: v.parent,
-		step:   v.step,
-		f:      v.f,
 	}
 }
 
